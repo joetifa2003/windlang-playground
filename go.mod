@@ -1,5 +1,7 @@
 module github.com/joetifa2003/wind-playground
 
+// +heroku goVersion go1.18
+
 go 1.18
 
 require (
