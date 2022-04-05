@@ -23,6 +23,7 @@ const Home: NextPage = () => {
                 const decompressed = LZUTF8.decompress(router.query.code, {
                     inputEncoding: "Base64",
                     outputEncoding: "String",
+                    useWebWorker: true,
                 });
 
                 setCode(decompressed);
@@ -36,6 +37,7 @@ const Home: NextPage = () => {
                 const compressed = LZUTF8.compress(code, {
                     inputEncoding: "String",
                     outputEncoding: "Base64",
+                    useWebWorker: true,
                 });
 
                 window.history.pushState(null, "", `?code=${compressed}`);
