@@ -1,9 +1,15 @@
 import type { NextPage } from "next";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "../lib/axios";
 import Editor from "@monaco-editor/react";
+import ReactLoading from "react-loading";
+import { useRouter } from "next/router";
+import LZUTF8 from "lzutf8";
+import debounce from "debounce";
 
 const Home: NextPage = () => {
+    const router = useRouter();
+
     const [code, setCode] = useState(`println("Hello, Wind!");`);
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<{
@@ -11,7 +17,36 @@ const Home: NextPage = () => {
         output: string;
     } | null>(null);
 
+    useEffect(() => {
+        if (router.isReady) {
+            if (router.query.code) {
+                const decompressed = LZUTF8.decompress(router.query.code, {
+                    inputEncoding: "Base64",
+                    outputEncoding: "String",
+                });
+
+                setCode(decompressed);
+            }
+        }
+    }, [router.query.code, router.isReady]);
+
+    const saveCode = useCallback(
+        debounce((code: string) => {
+            if (router.isReady) {
+                const compressed = LZUTF8.compress(code, {
+                    inputEncoding: "String",
+                    outputEncoding: "Base64",
+                });
+
+                window.history.pushState(null, "", `?code=${compressed}`);
+            }
+        }, 500),
+        [router.isReady]
+    );
+
     const run = useCallback(async () => {
+        setIsLoading(true);
+
         axios
             .post("/exec", {
                 code,
@@ -20,21 +55,26 @@ const Home: NextPage = () => {
                 setResult(res.data);
                 setIsLoading(false);
             })
-            .catch(() => {
+            .catch((err) => {
+                setResult(err.response?.data);
                 setIsLoading(false);
             });
     }, [code]);
 
     return (
-        <div className="container mt-4">
+        <div className="container mt-4 xl:px-32">
             <div className="flex flex-col space-y-4">
                 <div>
                     <Editor
                         height="500px"
                         defaultLanguage="rust"
                         value={code}
+                        defaultValue={code}
                         theme="vs-dark"
-                        onChange={(e) => setCode(e || "")}
+                        onChange={(e) => {
+                            setCode(e || "");
+                            saveCode(e || "");
+                        }}
                         className="font-mono"
                         options={{
                             fontFamily: "Fira Code",
@@ -42,18 +82,20 @@ const Home: NextPage = () => {
                         }}
                     />
                 </div>
-                {result && (
-                    <p>
+                {isLoading ? (
+                    <div className="mx-auto">
+                        <ReactLoading type="cylon" />
+                    </div>
+                ) : result ? (
+                    <p className="p-4 whitespace-pre bg-base-300">
                         {result.output}
                         <br />
                         {`[Duration ${result.duration}ms]`}
                     </p>
-                )}
-                <div>
-                    <button className="btn btn-primary btn-wide" onClick={run}>
-                        Run
-                    </button>
-                </div>
+                ) : null}
+                <button className="w-full btn btn-primary" onClick={run}>
+                    Run
+                </button>
             </div>
         </div>
     );

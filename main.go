@@ -30,47 +30,80 @@ func main() {
 			return
 		}
 
-		file := rb.Code
-		filePath := "<playground>.wind"
+		c1 := make(chan bool, 1)
 
-		timeStart := time.Now()
+		go func() {
+			finished := StartWindScript(c, rb.Code)
+			c1 <- finished
+		}()
 
-		input := string(file)
-		lexer := lexer.New(input)
-		parser := parser.New(lexer, filePath)
-		program := parser.ParseProgram()
-		parser.ReportErrors()
-
-		envManager := evaluator.NewEnvironmentManager()
-		env, _ := envManager.Get(filePath)
-		ev := evaluator.New(envManager, filePath)
-
-		rescueStdout := os.Stdout
-		r, w, _ := os.Pipe()
-		os.Stdout = w
-
-		_, evErr := ev.Eval(program, env)
-
-		w.Close()
-		out, _ := ioutil.ReadAll(r)
-		os.Stdout = rescueStdout
-
-		timeEnd := time.Since(timeStart)
-
-		if evErr != nil {
-			c.JSON(200, gin.H{
-				"output":   evErr.Inspect(),
-				"duration": timeEnd.Milliseconds(),
-			})
-
+		select {
+		case <-c1:
 			return
+		case <-time.After(time.Second * 10):
+			c.JSON(http.StatusRequestTimeout, gin.H{
+				"output":   "[Timeout]",
+				"duration": (time.Second * 10).Milliseconds()},
+			)
 		}
-
-		c.JSON(200, gin.H{
-			"output":   string(out),
-			"duration": timeEnd.Milliseconds(),
-		})
 	})
 
 	r.Run()
+}
+
+func StartWindScript(c *gin.Context, code string) bool {
+	filePath := "<playground>.wind"
+	timeStart := time.Now()
+	input := string(code)
+	lexer := lexer.New(input)
+	parser := parser.New(lexer, filePath)
+	program := parser.ParseProgram()
+	parserErrors := parser.ReportErrors()
+	if len(parserErrors) > 0 {
+		timeEnd := time.Since(timeStart)
+
+		out := ""
+		for _, err := range parserErrors {
+			out += err + "\n"
+		}
+
+		c.JSON(200, gin.H{
+			"output":   out,
+			"duration": timeEnd.Milliseconds(),
+		})
+
+		return true
+	}
+
+	envManager := evaluator.NewEnvironmentManager()
+	env, _ := envManager.Get(filePath)
+	ev := evaluator.New(envManager, filePath)
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	_, evErr := ev.Eval(program, env)
+
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	timeEnd := time.Since(timeStart)
+
+	if evErr != nil {
+		c.JSON(200, gin.H{
+			"output":   evErr.Inspect(),
+			"duration": timeEnd.Milliseconds(),
+		})
+
+		return true
+	}
+
+	c.JSON(200, gin.H{
+		"output":   string(out),
+		"duration": timeEnd.Milliseconds(),
+	})
+
+	return true
 }
