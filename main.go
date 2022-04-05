@@ -52,7 +52,7 @@ func main() {
 }
 
 func StartWindScript(c *gin.Context, code string) bool {
-	filePath := "<playground>.wind"
+	filePath := "./<playground>.wind"
 	timeStart := time.Now()
 	input := string(code)
 	lexer := lexer.New(input)
