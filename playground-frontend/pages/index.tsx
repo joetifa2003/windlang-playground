@@ -23,7 +23,10 @@ const Index = () => {
                                 Playground
                             </a>
                         </Link>
-                        <a className="w-full space-x-2 text-lg font-bold btn btn-outline lg:btn-wide">
+                        <a
+                            className="w-full space-x-2 text-lg font-bold btn btn-outline lg:btn-wide"
+                            href="https://github.com/joetifa2003/windlang"
+                        >
                             <span>Github</span>
                             <span
                                 className="iconify"
