@@ -1,106 +1,40 @@
-import type { NextPage } from "next";
-import { useCallback, useEffect, useState } from "react";
-import axios from "../lib/axios";
-import Editor from "@monaco-editor/react";
-import ReactLoading from "react-loading";
-import { useRouter } from "next/router";
-import LZUTF8 from "lzutf8";
-import debounce from "debounce";
+import Link from "next/link";
+import WindLogo from "../components/SVG/WindLogo";
 
-const Home: NextPage = () => {
-    const router = useRouter();
-
-    const [code, setCode] = useState(`println("Hello, Wind!");`);
-    const [isLoading, setIsLoading] = useState(false);
-    const [result, setResult] = useState<{
-        duration: number;
-        output: string;
-    } | null>(null);
-
-    useEffect(() => {
-        if (router.isReady) {
-            if (router.query.code) {
-                const decompressed = LZUTF8.decompress(router.query.code, {
-                    inputEncoding: "Base64",
-                    outputEncoding: "String",
-                    useWebWorker: true,
-                });
-
-                setCode(decompressed);
-            }
-        }
-    }, [router.query.code, router.isReady]);
-
-    const saveCode = useCallback(
-        debounce((code: string) => {
-            if (router.isReady) {
-                const compressed = LZUTF8.compress(code, {
-                    inputEncoding: "String",
-                    outputEncoding: "Base64",
-                    useWebWorker: true,
-                });
-
-                window.history.pushState(null, "", `?code=${compressed}`);
-            }
-        }, 500),
-        [router.isReady]
-    );
-
-    const run = useCallback(async () => {
-        setIsLoading(true);
-
-        axios
-            .post("/exec", {
-                code,
-            })
-            .then((res) => {
-                setResult(res.data);
-                setIsLoading(false);
-            })
-            .catch((err) => {
-                setResult(err.response?.data);
-                setIsLoading(false);
-            });
-    }, [code]);
-
+const Index = () => {
     return (
-        <div className="container mt-4 xl:px-32">
-            <div className="flex flex-col space-y-4">
-                <div>
-                    <Editor
-                        height="500px"
-                        defaultLanguage="rust"
-                        value={code}
-                        defaultValue={code}
-                        theme="vs-dark"
-                        onChange={(e) => {
-                            setCode(e || "");
-                            saveCode(e || "");
-                        }}
-                        className="font-mono"
-                        options={{
-                            fontFamily: "Fira Code",
-                            fontLigatures: true,
-                        }}
-                    />
-                </div>
-                {isLoading ? (
-                    <div className="mx-auto">
-                        <ReactLoading type="cylon" />
+        <>
+            <div className="container flex flex-col justify-center flex-1">
+                <div className="flex flex-col items-center space-y-8">
+                    <div className="md:w-[24rem] w-full">
+                        <WindLogo />
                     </div>
-                ) : result ? (
-                    <p className="p-4 whitespace-pre bg-base-300">
-                        {result.output}
-                        <br />
-                        {`[Duration ${result.duration}ms]`}
-                    </p>
-                ) : null}
-                <button className="w-full btn btn-primary" onClick={run}>
-                    Run
-                </button>
+                    <div className="space-y-4">
+                        <h1 className="text-5xl font-bold text-center md:text-6xl">
+                            WindLang
+                        </h1>
+                        <p className="text-2xl text-center sm:text-3xl lg:text-4xl">
+                            A simple programming language built with golang 🍃
+                        </p>
+                    </div>
+                    <div className="grid w-full gap-4 lg:w-auto lg:grid-cols-2">
+                        <Link href="/playground">
+                            <a className="w-full text-lg font-bold btn btn-primary lg:btn-wide">
+                                Playground
+                            </a>
+                        </Link>
+                        <a className="w-full space-x-2 text-lg font-bold btn btn-outline lg:btn-wide">
+                            <span>Github</span>
+                            <span
+                                className="iconify"
+                                data-icon="akar-icons:github-fill"
+                            ></span>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
+        </>
     );
 };
 
-export default Home;
+export default Index;
