@@ -6,10 +6,28 @@ const WindLogo = () => {
             xmlns="http://www.w3.org/2000/svg"
             className="bounce"
         >
-            <path d="M0 0V64H78L36 39.1642L0 0Z" fill="#25E3D8" />
-            <path d="M96 0V64H18L60 39.1642L96 0Z" fill="#25E3D8" />
+            <path
+                d="M0 0V64H78L36 39.1642L0 0Z"
+                fill="#25E3D8"
+                className="wind-animate"
+            />
+            <path
+                d="M96 0V64H18L60 39.1642L96 0Z"
+                fill="#25E3D8"
+                className="wind-animate"
+                style={{
+                    animationDelay: "0.1s",
+                }}
+            />
             <g filter="url(#filter0_i_2_11)">
-                <path d="M47 6L8 64H86L47 6Z" fill="#00F8E9" />
+                <path
+                    d="M47 6L8 64H86L47 6Z"
+                    fill="#00F8E9"
+                    className="wind-animate"
+                    style={{
+                        animationDelay: "0.2s",
+                    }}
+                />
             </g>
             <defs>
                 <filter
