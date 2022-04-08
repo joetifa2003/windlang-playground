@@ -112,7 +112,7 @@ const Home: NextPage = () => {
                     )}
                 </div>
                 {result && (
-                    <p className="p-4 whitespace-pre bg-base-300">
+                    <p className="p-4 whitespace-pre-wrap bg-base-300">
                         {result.output}
                         <br />
                         {`[Duration ${result.duration}ms]`}
