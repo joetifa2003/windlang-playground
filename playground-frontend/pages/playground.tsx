@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import { useCallback, useEffect, useState } from "react";
-import axios from "../lib/axios";
+import kyClient from "../lib/ky";
 import Editor from "@monaco-editor/react";
 import ReactLoading from "react-loading";
 import { useRouter } from "next/router";
@@ -52,12 +52,13 @@ const Home: NextPage = () => {
     const run = useCallback(async () => {
         setIsLoading(true);
 
-        axios
-            .post("/exec", {
-                code,
+        kyClient
+            .post("exec", {
+                json: { code },
             })
+            .json<any>()
             .then((res) => {
-                setResult(res.data);
+                setResult(res);
                 setIsLoading(false);
             })
             .catch((err) => {

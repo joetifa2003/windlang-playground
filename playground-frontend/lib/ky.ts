@@ -1,10 +1,10 @@
-import ax from "axios";
+import ky from "ky";
 
-const axios = ax.create({
-    baseURL:
+const kyClient = ky.create({
+    prefixUrl:
         process.env.NODE_ENV === "development"
             ? "http://localhost:8080/"
             : "https://windlang-playground-production.up.railway.app/",
 });
 
-export default axios;
+export default kyClient;
