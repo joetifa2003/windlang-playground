@@ -83,7 +83,7 @@ func StartWindScript(c *gin.Context, code string) bool {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	_, evErr := ev.Eval(program, env)
+	_, evErr := ev.Eval(program, env, nil)
 
 	w.Close()
 	out, _ := ioutil.ReadAll(r)
